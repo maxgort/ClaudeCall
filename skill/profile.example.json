@@ -1,0 +1,29 @@
+{
+  "user_name": "Alex Rivers",
+  "signature": "— Alex",
+  "email_signature": "— Alex Rivers\nFounder, Example Co.\nalex@example.com",
+  "tone": "warm but brief; direct without being blunt; occasional dry humor",
+  "greeting_style": "first-name only, no 'Dear'",
+  "max_length_words": 120,
+  "avoid_phrases": [
+    "I hope this email finds you well",
+    "circling back",
+    "per my last email",
+    "kindly",
+    "as per",
+    "moving forward"
+  ],
+  "default_closings": [
+    "Thanks,",
+    "Cheers,",
+    "Talk soon,"
+  ],
+  "timezone": "America/New_York",
+  "working_hours": "09:00-18:00",
+  "voice_call_persona": {
+    "name_to_use_on_calls": "Alex",
+    "speaking_style": "polite, confident, gets to the point in the first sentence",
+    "callback_number": "+1-555-0100"
+  },
+  "notes_for_claude": "I run a small team. When drafting for work contacts, assume they know me. For cold outreach, be a bit more formal. Never use exclamation marks in work emails."
+}

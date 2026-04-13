@@ -44,16 +44,20 @@ test("run() creates config file with 4 mcpServers entries in empty dir", () => {
     const cfg = JSON.parse(readFileSync(configPath, "utf8"));
     const names = Object.keys(cfg.mcpServers).sort();
     assert.deepEqual(names, [
+      "claudecall-calendar",
       "claudecall-core",
       "claudecall-email",
+      "claudecall-slack",
       "claudecall-telegram",
       "claudecall-voice",
     ]);
     assert.equal(cfg.mcpServers["claudecall-core"].command, "/usr/bin/node");
     assert.equal(result.backupPath, null, "no backup when no existing file");
     assert.deepEqual(result.servers.sort(), [
+      "claudecall-calendar",
       "claudecall-core",
       "claudecall-email",
+      "claudecall-slack",
       "claudecall-telegram",
       "claudecall-voice",
     ]);
@@ -98,7 +102,7 @@ test("run() merges into existing mcpServers without clobbering unrelated entries
     );
     assert.equal(cfg.mcpServers["some-other-server"].command, "python");
     assert.ok(cfg.mcpServers["claudecall-core"]);
-    assert.equal(Object.keys(cfg.mcpServers).length, 5);
+    assert.equal(Object.keys(cfg.mcpServers).length, 7);
   } finally {
     cleanup();
   }
@@ -124,7 +128,7 @@ test("run() overwrites stale claudecall-* entries (idempotent, no duplicates)", 
     });
 
     const cfg = JSON.parse(readFileSync(configPath, "utf8"));
-    assert.equal(Object.keys(cfg.mcpServers).length, 4);
+    assert.equal(Object.keys(cfg.mcpServers).length, 6);
     assert.equal(cfg.mcpServers["claudecall-core"].command, "/new/node");
     const arg = cfg.mcpServers["claudecall-core"].args[0].replace(/\\/g, "/");
     assert.match(arg, /new\/path\/mcps/);
@@ -185,7 +189,7 @@ test("run() handles corrupt existing JSON: backs up and starts fresh", () => {
     );
 
     const cfg = JSON.parse(readFileSync(configPath, "utf8"));
-    assert.equal(Object.keys(cfg.mcpServers).length, 4);
+    assert.equal(Object.keys(cfg.mcpServers).length, 6);
   } finally {
     cleanup();
   }
@@ -230,7 +234,7 @@ test("run() preserves a config that has no mcpServers key at all", () => {
 
     const cfg = JSON.parse(readFileSync(configPath, "utf8"));
     assert.equal(cfg.someOtherKey, 1);
-    assert.equal(Object.keys(cfg.mcpServers).length, 4);
+    assert.equal(Object.keys(cfg.mcpServers).length, 6);
   } finally {
     cleanup();
   }
@@ -265,6 +269,8 @@ test("buildServerEntries uses absolute paths for every MCP", () => {
     "claudecall-email",
     "claudecall-voice",
     "claudecall-telegram",
+    "claudecall-slack",
+    "claudecall-calendar",
   ]) {
     assert.ok(entries[name], "has " + name);
     assert.equal(entries[name].command, "/usr/bin/node");

@@ -44,12 +44,18 @@ test("tools/list exposes the expected tool names on all 4 servers", async () => 
     ]);
     assert.deepEqual(byName(await email.listTools()), [
       "email_cancel",
+      "email_find_stale",
+      "email_list_unread",
+      "email_mark_read",
       "email_preview",
+      "email_read",
+      "email_search",
       "email_send",
     ]);
     assert.deepEqual(byName(await voice.listTools()), [
       "voice_cancel",
       "voice_create_call",
+      "voice_get_call_result",
       "voice_list_scenarios",
       "voice_preview",
     ]);

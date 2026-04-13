@@ -62,10 +62,33 @@ function err(text) {
   console.log("\x1b[31m✗\x1b[0m " + text);
 }
 
-async function ask(prompt, { def = "" } = {}) {
-  const suffix = def ? ` [${def}]` : "";
-  const answer = (await rl.question(prompt + suffix + " ")).trim();
-  return answer || def;
+// Prompt for a value. Options:
+//   def         — default value to fall back to on empty input
+//   sensitive   — never echo the default to the screen; show [saved] instead
+//   required    — reject empty input that has no default (loops until filled)
+//
+// Returns the final value. For sensitive fields, empty input with an existing
+// default keeps the existing value silently (no display, no leak).
+async function ask(prompt, { def = "", sensitive = false, required = false } = {}) {
+  let suffix = "";
+  if (def) {
+    suffix = sensitive ? " [saved — press Enter to keep]" : ` [${def}]`;
+  } else if (required) {
+    suffix = " (required)";
+  }
+  while (true) {
+    const answer = (await rl.question(prompt + suffix + " ")).trim();
+    if (answer) return answer;
+    if (def) {
+      if (sensitive) dim("    (keeping existing value)");
+      return def;
+    }
+    if (required) {
+      warn("  value required — cannot be empty");
+      continue;
+    }
+    return "";
+  }
 }
 
 async function askYesNo(prompt, { def = false } = {}) {
@@ -154,18 +177,13 @@ async function setupEmail(configPath, existing) {
 
   const user = await ask("  Your email address (e.g. you@gmail.com):", {
     def: existing.SMTP_USER || "",
+    required: true,
   });
-  if (!user) {
-    warn("  Skipping email — no address provided.");
-    return;
-  }
   const pass = await ask("  App password / SMTP password:", {
     def: existing.SMTP_PASS || "",
+    sensitive: true,
+    required: true,
   });
-  if (!pass) {
-    warn("  Skipping email — no password provided.");
-    return;
-  }
 
   // Sane defaults for Gmail.
   const isGmail = /@gmail\.com$/i.test(user);
@@ -214,18 +232,13 @@ async function setupTelegram(configPath, existing) {
 
   const apiId = await ask("  Telegram api_id (number):", {
     def: existing.TELEGRAM_API_ID || "",
+    required: true,
   });
-  if (!apiId) {
-    warn("  Skipping Telegram — no api_id.");
-    return;
-  }
   const apiHash = await ask("  Telegram api_hash (32 chars):", {
     def: existing.TELEGRAM_API_HASH || "",
+    sensitive: true,
+    required: true,
   });
-  if (!apiHash) {
-    warn("  Skipping Telegram — no api_hash.");
-    return;
-  }
   persistEnvValues(configPath, {
     TELEGRAM_API_ID: apiId,
     TELEGRAM_API_HASH: apiHash,
@@ -264,11 +277,11 @@ async function setupSlack(configPath, existing) {
   console.log();
   openUrl("https://api.slack.com/apps");
 
-  const token = await ask("  Bot User OAuth Token (xoxb-...):");
-  if (!token) {
-    warn("  Skipping Slack — no token.");
-    return;
-  }
+  const token = await ask("  Bot User OAuth Token (xoxb-...):", {
+    def: existing.SLACK_BOT_TOKEN || "",
+    sensitive: true,
+    required: true,
+  });
   persistEnvValues(configPath, { SLACK_BOT_TOKEN: token });
   ok("Slack saved. Remember to invite your bot to any channel you want it to post in (/invite @YourBot).");
 }
@@ -294,16 +307,15 @@ async function setupCalendar(configPath, existing) {
   openUrl("https://console.cloud.google.com/apis/credentials");
   await ask("  Press Enter when you have the Client ID and Client Secret...");
 
-  const clientId = await ask("  Google Client ID:");
-  if (!clientId) {
-    warn("  Skipping Calendar — no client id.");
-    return;
-  }
-  const clientSecret = await ask("  Google Client Secret:");
-  if (!clientSecret) {
-    warn("  Skipping Calendar — no client secret.");
-    return;
-  }
+  const clientId = await ask("  Google Client ID:", {
+    def: existing.GOOGLE_CLIENT_ID || "",
+    required: true,
+  });
+  const clientSecret = await ask("  Google Client Secret:", {
+    def: existing.GOOGLE_CLIENT_SECRET || "",
+    sensitive: true,
+    required: true,
+  });
   persistEnvValues(configPath, {
     GOOGLE_CLIENT_ID: clientId,
     GOOGLE_CLIENT_SECRET: clientSecret,
@@ -340,21 +352,19 @@ async function setupVapi(configPath, existing) {
   console.log();
   openUrl("https://dashboard.vapi.ai");
 
-  const apiKey = await ask("  Vapi API key:");
-  if (!apiKey) {
-    warn("  Skipping Vapi — no key.");
-    return;
-  }
-  const phoneId = await ask("  Vapi phone number ID:");
-  if (!phoneId) {
-    warn("  Skipping Vapi — no phone id.");
-    return;
-  }
-  const assistantId = await ask("  Vapi assistant ID:");
-  if (!assistantId) {
-    warn("  Skipping Vapi — no assistant id.");
-    return;
-  }
+  const apiKey = await ask("  Vapi API key:", {
+    def: existing.VAPI_API_KEY || "",
+    sensitive: true,
+    required: true,
+  });
+  const phoneId = await ask("  Vapi phone number ID:", {
+    def: existing.VAPI_PHONE_NUMBER_ID || "",
+    required: true,
+  });
+  const assistantId = await ask("  Vapi assistant ID:", {
+    def: existing.VAPI_ASSISTANT_ID || "",
+    required: true,
+  });
   persistEnvValues(configPath, {
     VAPI_API_KEY: apiKey,
     VAPI_PHONE_NUMBER_ID: phoneId,

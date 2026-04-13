@@ -5,17 +5,31 @@ import { getConfigEnv } from "../../skill/scripts/paths.mjs";
 // injects these via process.env from the extension's user_config form. When
 // running from a git checkout, they come from ~/.claudecall/config.env.
 const CONFIG_KEYS = [
+  // SMTP (outgoing email)
   "SMTP_HOST",
   "SMTP_PORT",
   "SMTP_USER",
   "SMTP_PASS",
   "SMTP_FROM",
+  // IMAP (incoming email reading)
+  "IMAP_HOST",
+  "IMAP_PORT",
+  "IMAP_USER",
+  "IMAP_PASS",
+  // Voice (Vapi)
   "VAPI_API_KEY",
   "VAPI_PHONE_NUMBER_ID",
   "VAPI_ASSISTANT_ID",
+  // Telegram (MTProto user account)
   "TELEGRAM_API_ID",
   "TELEGRAM_API_HASH",
   "TELEGRAM_SESSION",
+  // Slack
+  "SLACK_BOT_TOKEN",
+  // Google Calendar
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_CALENDAR_REFRESH_TOKEN",
 ];
 
 function parseEnvFile(path) {

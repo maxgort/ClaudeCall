@@ -1,0 +1,151 @@
+{
+  "manifest_version": "0.3",
+  "name": "claudecall",
+  "display_name": "ClaudeCall",
+  "version": "0.1.0",
+  "description": "Turn Claude into your personal communication agent — sends emails, places phone calls, and messages on Telegram, with explicit human approval before anything goes out.",
+  "long_description": "ClaudeCall bundles email (SMTP), voice calls (Vapi), and Telegram (user account via MTProto) into one Claude Desktop extension. Every outbound action is previewed in chat and waits for your 'ok' before sending. Your credentials never leave your machine — they're stored in the OS keychain.",
+  "author": {
+    "name": "ClaudeCall"
+  },
+  "homepage": "https://github.com/claudecall/claudecall",
+  "server": {
+    "type": "node",
+    "entry_point": "bundle/index.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/bundle/index.mjs"],
+      "env": {
+        "SMTP_HOST": "${user_config.smtp_host}",
+        "SMTP_PORT": "${user_config.smtp_port}",
+        "SMTP_USER": "${user_config.smtp_user}",
+        "SMTP_PASS": "${user_config.smtp_pass}",
+        "SMTP_FROM": "${user_config.smtp_from}",
+        "VAPI_API_KEY": "${user_config.vapi_api_key}",
+        "VAPI_PHONE_NUMBER_ID": "${user_config.vapi_phone_number_id}",
+        "VAPI_ASSISTANT_ID": "${user_config.vapi_assistant_id}",
+        "TELEGRAM_API_ID": "${user_config.telegram_api_id}",
+        "TELEGRAM_API_HASH": "${user_config.telegram_api_hash}",
+        "TELEGRAM_SESSION": "${user_config.telegram_session}",
+        "CLAUDECALL_ROOT": "${user_config.claudecall_root}"
+      }
+    }
+  },
+  "user_config": {
+    "claudecall_root": {
+      "type": "directory",
+      "title": "State directory",
+      "description": "Where ClaudeCall stores history, pending drafts, and your style profile. Leave default unless you know what you're doing.",
+      "required": false,
+      "default": "${HOME}/.claudecall"
+    },
+    "smtp_host": {
+      "type": "string",
+      "title": "SMTP host",
+      "description": "Email server hostname. For Gmail: smtp.gmail.com",
+      "required": false,
+      "default": "smtp.gmail.com"
+    },
+    "smtp_port": {
+      "type": "string",
+      "title": "SMTP port",
+      "description": "587 for STARTTLS (recommended), 465 for implicit SSL.",
+      "required": false,
+      "default": "587"
+    },
+    "smtp_user": {
+      "type": "string",
+      "title": "SMTP username (your email address)",
+      "description": "The email address you send from.",
+      "required": false
+    },
+    "smtp_pass": {
+      "type": "string",
+      "title": "SMTP password or app password",
+      "description": "For Gmail: create an app password at https://myaccount.google.com/apppasswords (requires 2FA).",
+      "sensitive": true,
+      "required": false
+    },
+    "smtp_from": {
+      "type": "string",
+      "title": "From display name and address (optional)",
+      "description": "Format: \"Your Name <you@example.com>\". Leaves blank to use SMTP username.",
+      "required": false
+    },
+    "vapi_api_key": {
+      "type": "string",
+      "title": "Vapi API key",
+      "description": "From https://dashboard.vapi.ai → Settings → API Keys. Leave blank to disable phone calls.",
+      "sensitive": true,
+      "required": false
+    },
+    "vapi_phone_number_id": {
+      "type": "string",
+      "title": "Vapi phone number ID",
+      "description": "The ID of a phone number in your Vapi account. Leave blank to disable phone calls.",
+      "required": false
+    },
+    "vapi_assistant_id": {
+      "type": "string",
+      "title": "Vapi assistant ID",
+      "description": "The ID of the assistant that will speak on calls. Leave blank to disable phone calls.",
+      "required": false
+    },
+    "telegram_api_id": {
+      "type": "string",
+      "title": "Telegram API ID",
+      "description": "From https://my.telegram.org → API development tools. Leave blank to disable Telegram.",
+      "required": false
+    },
+    "telegram_api_hash": {
+      "type": "string",
+      "title": "Telegram API hash",
+      "description": "32-character string from my.telegram.org. Leave blank to disable Telegram.",
+      "sensitive": true,
+      "required": false
+    },
+    "telegram_session": {
+      "type": "string",
+      "title": "Telegram session string",
+      "description": "Run 'node scripts/telegram_login.mjs' from the ClaudeCall git repo to obtain this, then paste it here. Without this, Telegram tools will not work.",
+      "sensitive": true,
+      "required": false
+    }
+  },
+  "tools": [
+    { "name": "load_profile", "description": "Load the user's style profile" },
+    { "name": "query_history", "description": "Recent interactions with a contact across all channels" },
+    { "name": "log_sent", "description": "Log a sent message to history" },
+    { "name": "list_pending", "description": "List pending outbound drafts" },
+    { "name": "email_preview", "description": "Draft an email and wait for approval" },
+    { "name": "email_send", "description": "Send an approved email via SMTP" },
+    { "name": "email_cancel", "description": "Cancel a pending email" },
+    { "name": "voice_list_scenarios", "description": "List pre-baked call scenarios" },
+    { "name": "voice_preview", "description": "Draft an outbound call and wait for approval" },
+    { "name": "voice_create_call", "description": "Place an approved call via Vapi" },
+    { "name": "voice_cancel", "description": "Cancel a pending call" },
+    { "name": "telegram_preview", "description": "Draft a Telegram message and wait for approval" },
+    { "name": "telegram_send", "description": "Send an approved message through your Telegram account" },
+    { "name": "telegram_cancel", "description": "Cancel a pending Telegram draft" },
+    { "name": "telegram_list_dialogs", "description": "List your recent Telegram chats" },
+    { "name": "telegram_read_history", "description": "Read recent messages from a chat" },
+    { "name": "telegram_find_contact", "description": "Fuzzy-search your contacts" }
+  ],
+  "keywords": [
+    "email",
+    "telegram",
+    "voice",
+    "calls",
+    "communication",
+    "agent",
+    "mcp"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+.git/
+.gitignore
+.mcpbignore
+.vscode/
+.idea/
+*.log
+*.swp
+.DS_Store
+Thumbs.db
+
+# Dev-only
+test/
+scripts/e2e_*.mjs
+scripts/telegram_login.mjs
+install.sh
+install.ps1
+
+# Plans and notes — not shipped
+*.mcpb
+*.mcpb.sig
+
+# dev deps we don't need at runtime
+node_modules/@anthropic-ai/mcpb/
+
+# Windows noise
+*.tmp

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "claudecall",
   "display_name": "ClaudeCall",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turn Claude into your personal communication agent — sends emails, places phone calls, and messages on Telegram, with explicit human approval before anything goes out.",
   "long_description": "ClaudeCall bundles email (SMTP), voice calls (Vapi), and Telegram (user account via MTProto) into one Claude Desktop extension. Every outbound action is previewed in chat and waits for your 'ok' before sending. Your credentials never leave your machine — they're stored in the OS keychain.",
   "author": {
@@ -21,12 +21,20 @@
         "SMTP_USER": "${user_config.smtp_user}",
         "SMTP_PASS": "${user_config.smtp_pass}",
         "SMTP_FROM": "${user_config.smtp_from}",
+        "IMAP_HOST": "${user_config.imap_host}",
+        "IMAP_PORT": "${user_config.imap_port}",
+        "IMAP_USER": "${user_config.imap_user}",
+        "IMAP_PASS": "${user_config.imap_pass}",
         "VAPI_API_KEY": "${user_config.vapi_api_key}",
         "VAPI_PHONE_NUMBER_ID": "${user_config.vapi_phone_number_id}",
         "VAPI_ASSISTANT_ID": "${user_config.vapi_assistant_id}",
         "TELEGRAM_API_ID": "${user_config.telegram_api_id}",
         "TELEGRAM_API_HASH": "${user_config.telegram_api_hash}",
         "TELEGRAM_SESSION": "${user_config.telegram_session}",
+        "SLACK_BOT_TOKEN": "${user_config.slack_bot_token}",
+        "GOOGLE_CLIENT_ID": "${user_config.google_client_id}",
+        "GOOGLE_CLIENT_SECRET": "${user_config.google_client_secret}",
+        "GOOGLE_CALENDAR_REFRESH_TOKEN": "${user_config.google_calendar_refresh_token}",
         "CLAUDECALL_ROOT": "${user_config.claudecall_root}"
       }
     }
@@ -72,6 +80,33 @@
       "description": "Format: \"Your Name <you@example.com>\". Leaves blank to use SMTP username.",
       "required": false
     },
+    "imap_host": {
+      "type": "string",
+      "title": "IMAP host (for reading inbox)",
+      "description": "For Gmail: imap.gmail.com. Leave blank to disable inbox reading.",
+      "required": false,
+      "default": "imap.gmail.com"
+    },
+    "imap_port": {
+      "type": "string",
+      "title": "IMAP port",
+      "description": "993 for implicit SSL.",
+      "required": false,
+      "default": "993"
+    },
+    "imap_user": {
+      "type": "string",
+      "title": "IMAP username",
+      "description": "Usually the same as SMTP username.",
+      "required": false
+    },
+    "imap_pass": {
+      "type": "string",
+      "title": "IMAP password",
+      "description": "Usually the same app password as SMTP.",
+      "sensitive": true,
+      "required": false
+    },
     "vapi_api_key": {
       "type": "string",
       "title": "Vapi API key",
@@ -110,6 +145,33 @@
       "description": "Run 'node scripts/telegram_login.mjs' from the ClaudeCall git repo to obtain this, then paste it here. Without this, Telegram tools will not work.",
       "sensitive": true,
       "required": false
+    },
+    "slack_bot_token": {
+      "type": "string",
+      "title": "Slack Bot User OAuth Token",
+      "description": "Create a Slack app at https://api.slack.com/apps, add chat:write + channels:read + users:read scopes, install to workspace, and copy the Bot User OAuth Token (xoxb-...). Leave blank to disable Slack.",
+      "sensitive": true,
+      "required": false
+    },
+    "google_client_id": {
+      "type": "string",
+      "title": "Google OAuth Client ID",
+      "description": "Create a 'Desktop app' OAuth client at https://console.cloud.google.com/apis/credentials with the Calendar API enabled. Leave blank to disable Calendar.",
+      "required": false
+    },
+    "google_client_secret": {
+      "type": "string",
+      "title": "Google OAuth Client Secret",
+      "description": "From the same Google Cloud OAuth client page.",
+      "sensitive": true,
+      "required": false
+    },
+    "google_calendar_refresh_token": {
+      "type": "string",
+      "title": "Google Calendar refresh token",
+      "description": "Run 'node scripts/calendar_login.mjs' from the ClaudeCall git repo to obtain this, then paste it here.",
+      "sensitive": true,
+      "required": false
     }
   },
   "tools": [
@@ -120,16 +182,37 @@
     { "name": "email_preview", "description": "Draft an email and wait for approval" },
     { "name": "email_send", "description": "Send an approved email via SMTP" },
     { "name": "email_cancel", "description": "Cancel a pending email" },
+    { "name": "email_list_unread", "description": "List unread messages in your inbox" },
+    { "name": "email_search", "description": "Search the inbox by from/subject/body/date" },
+    { "name": "email_read", "description": "Fetch the full body of a specific message" },
+    { "name": "email_mark_read", "description": "Mark a message as read" },
+    { "name": "email_find_stale", "description": "Find sent emails with no reply after N days" },
     { "name": "voice_list_scenarios", "description": "List pre-baked call scenarios" },
     { "name": "voice_preview", "description": "Draft an outbound call and wait for approval" },
     { "name": "voice_create_call", "description": "Place an approved call via Vapi" },
     { "name": "voice_cancel", "description": "Cancel a pending call" },
+    { "name": "voice_get_call_result", "description": "Fetch status/transcript/summary of a placed call" },
     { "name": "telegram_preview", "description": "Draft a Telegram message and wait for approval" },
     { "name": "telegram_send", "description": "Send an approved message through your Telegram account" },
     { "name": "telegram_cancel", "description": "Cancel a pending Telegram draft" },
     { "name": "telegram_list_dialogs", "description": "List your recent Telegram chats" },
     { "name": "telegram_read_history", "description": "Read recent messages from a chat" },
-    { "name": "telegram_find_contact", "description": "Fuzzy-search your contacts" }
+    { "name": "telegram_find_contact", "description": "Fuzzy-search your contacts" },
+    { "name": "slack_preview", "description": "Draft a Slack message and wait for approval" },
+    { "name": "slack_send", "description": "Send an approved Slack message" },
+    { "name": "slack_cancel", "description": "Cancel a pending Slack draft" },
+    { "name": "slack_list_channels", "description": "List workspace channels" },
+    { "name": "slack_find_user", "description": "Fuzzy-search workspace users" },
+    { "name": "slack_read_history", "description": "Read recent messages from a channel" },
+    { "name": "calendar_list_events", "description": "List calendar events in a time range" },
+    { "name": "calendar_get_event", "description": "Fetch a specific calendar event" },
+    { "name": "calendar_create_preview", "description": "Draft a new calendar event" },
+    { "name": "calendar_create_confirm", "description": "Create an approved calendar event" },
+    { "name": "calendar_update_preview", "description": "Draft an update to a calendar event" },
+    { "name": "calendar_update_confirm", "description": "Apply an approved event update" },
+    { "name": "calendar_delete_preview", "description": "Draft a calendar event deletion" },
+    { "name": "calendar_delete_confirm", "description": "Delete an approved event" },
+    { "name": "calendar_find_slot", "description": "Find free time slots respecting working hours" }
   ],
   "keywords": [
     "email",

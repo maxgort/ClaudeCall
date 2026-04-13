@@ -23,16 +23,20 @@ import {
   registerTelegramTools,
   disconnectTelegramClient,
 } from "../mcps/telegram/register.mjs";
+import { registerSlackTools } from "../mcps/slack/register.mjs";
+import { registerCalendarTools } from "../mcps/calendar/register.mjs";
 
 const server = new McpServer({
   name: "claudecall",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 registerCoreTools(server);
 registerEmailTools(server);
 registerVoiceTools(server);
 registerTelegramTools(server);
+registerSlackTools(server);
+registerCalendarTools(server);
 
 process.on("exit", () => disconnectTelegramClient());
 

@@ -73,6 +73,14 @@ export function buildServerEntries(repoRoot, nodeBin) {
       command: nodeBin,
       args: [join(repoRoot, "mcps", "telegram", "index.mjs")],
     },
+    "claudecall-slack": {
+      command: nodeBin,
+      args: [join(repoRoot, "mcps", "slack", "index.mjs")],
+    },
+    "claudecall-calendar": {
+      command: nodeBin,
+      args: [join(repoRoot, "mcps", "calendar", "index.mjs")],
+    },
   };
 }
 

@@ -16,36 +16,16 @@
 //   5. Refresh token is saved back to config.env as GOOGLE_CALENDAR_REFRESH_TOKEN
 
 import { createServer } from "node:http";
-import { readFileSync, writeFileSync } from "node:fs";
 import { exec } from "node:child_process";
 
 import { google } from "googleapis";
 
 import { getConfigEnv } from "../skill/scripts/paths.mjs";
 import { loadConfig } from "../mcps/shared/config.mjs";
+import { persistEnvValue } from "../skill/scripts/env_file.mjs";
 import { GOOGLE_SCOPES } from "../mcps/calendar/helpers.mjs";
 
 const CONFIG_ENV = getConfigEnv();
-
-function upsertEnvLine(raw, key, value) {
-  const lines = raw.split(/\r?\n/);
-  const pattern = new RegExp("^" + key + "\\s*=");
-  let found = false;
-  const quoted =
-    value && (value.includes(" ") || value.includes("#"))
-      ? `"${value}"`
-      : value;
-  const newLine = `${key}=${quoted}`;
-  for (let i = 0; i < lines.length; i++) {
-    if (pattern.test(lines[i].trim())) {
-      lines[i] = newLine;
-      found = true;
-      break;
-    }
-  }
-  if (!found) lines.push(newLine);
-  return lines.join("\n");
-}
 
 function openUrl(url) {
   const platform = process.platform;
@@ -106,18 +86,7 @@ async function main() {
     process.exit(1);
   }
 
-  let raw = "";
-  try {
-    raw = readFileSync(CONFIG_ENV, "utf8");
-  } catch {
-    raw = "";
-  }
-  raw = upsertEnvLine(
-    raw,
-    "GOOGLE_CALENDAR_REFRESH_TOKEN",
-    tokens.refresh_token
-  );
-  writeFileSync(CONFIG_ENV, raw);
+  persistEnvValue(CONFIG_ENV, "GOOGLE_CALENDAR_REFRESH_TOKEN", tokens.refresh_token);
 
   console.log("\n=== Logged in ===");
   console.log("Refresh token saved to " + CONFIG_ENV);

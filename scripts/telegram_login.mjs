@@ -10,7 +10,6 @@
 // On success, writes the session string back into config.env under
 // TELEGRAM_SESSION.
 
-import { readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
@@ -19,6 +18,7 @@ import { StringSession } from "telegram/sessions/index.js";
 
 import { getConfigEnv } from "../skill/scripts/paths.mjs";
 import { loadConfig } from "../mcps/shared/config.mjs";
+import { persistEnvValues } from "../skill/scripts/env_file.mjs";
 
 const CONFIG_ENV = getConfigEnv();
 const rl = createInterface({ input, output });
@@ -39,26 +39,6 @@ async function ask(prompt, { hidden = false } = {}) {
   output.write = orig;
   process.stdout.write("\n");
   return answer.trim();
-}
-
-function upsertEnvLine(raw, key, value) {
-  const lines = raw.split(/\r?\n/);
-  const pattern = new RegExp("^" + key + "\\s*=");
-  let found = false;
-  const quoted =
-    value && (value.includes(" ") || value.includes("#"))
-      ? `"${value}"`
-      : value;
-  const newLine = `${key}=${quoted}`;
-  for (let i = 0; i < lines.length; i++) {
-    if (pattern.test(lines[i].trim())) {
-      lines[i] = newLine;
-      found = true;
-      break;
-    }
-  }
-  if (!found) lines.push(newLine);
-  return lines.join("\n");
 }
 
 async function main() {
@@ -99,17 +79,11 @@ async function main() {
   const session = client.session.save();
   const me = await client.getMe();
 
-  // Persist api_id / api_hash / session back into config.env.
-  let raw = "";
-  try {
-    raw = readFileSync(CONFIG_ENV, "utf8");
-  } catch {
-    raw = "";
-  }
-  raw = upsertEnvLine(raw, "TELEGRAM_API_ID", String(apiId));
-  raw = upsertEnvLine(raw, "TELEGRAM_API_HASH", apiHash);
-  raw = upsertEnvLine(raw, "TELEGRAM_SESSION", session);
-  writeFileSync(CONFIG_ENV, raw);
+  persistEnvValues(CONFIG_ENV, {
+    TELEGRAM_API_ID: String(apiId),
+    TELEGRAM_API_HASH: apiHash,
+    TELEGRAM_SESSION: session,
+  });
 
   console.log();
   console.log("=== Logged in ===");

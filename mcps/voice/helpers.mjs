@@ -118,6 +118,62 @@ export async function createVapiCall(
   return { call_id: data.id, status: data.status, script };
 }
 
+// Polls Vapi for the result of a previously-placed call. Returns status,
+// duration, transcript, recording URL, and a short summary if the call has
+// ended. Polls once — Claude can call this tool repeatedly if status is
+// still 'queued' or 'in-progress'.
+export async function getVapiCallResult(
+  config,
+  callId,
+  { fetchFn = fetch, baseUrl = VAPI_BASE_URL } = {}
+) {
+  let resp;
+  try {
+    resp = await fetchFn(baseUrl + "/call/" + encodeURIComponent(callId), {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + config.VAPI_API_KEY,
+      },
+    });
+  } catch (err) {
+    throw new VapiError("network error: " + err.message);
+  }
+
+  let data;
+  try {
+    data = await resp.json();
+  } catch {
+    data = {};
+  }
+
+  if (!resp.ok) {
+    throw new VapiError(
+      "Vapi call lookup failed (" + resp.status + "): " + JSON.stringify(data),
+      { status: resp.status, data }
+    );
+  }
+
+  return {
+    call_id: data.id,
+    status: data.status,
+    ended_reason: data.endedReason || null,
+    started_at: data.startedAt || null,
+    ended_at: data.endedAt || null,
+    duration_seconds:
+      data.startedAt && data.endedAt
+        ? Math.round(
+            (new Date(data.endedAt).getTime() -
+              new Date(data.startedAt).getTime()) /
+              1000
+          )
+        : null,
+    transcript: data.transcript || null,
+    summary: data.summary || data.analysis?.summary || null,
+    recording_url: data.recordingUrl || null,
+    cost_usd: typeof data.cost === "number" ? data.cost : null,
+  };
+}
+
 export function formatVoicePreview(p, scenarioBody) {
   return [
     "Call to:    " + p.to_number,

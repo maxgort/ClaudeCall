@@ -14,6 +14,7 @@ import {
   isValidScenarioName,
   formatVoicePreview,
   createVapiCall,
+  getVapiCallResult,
   VapiError,
   SCENARIO_NAME_RE,
 } from "./helpers.mjs";
@@ -162,6 +163,47 @@ export function registerVoiceTools(server) {
       const row = resolvePending(pending_id, "cancelled");
       if (!row) return errorReply("No pending row with id " + pending_id);
       return jsonReply({ ok: true, cancelled: row.id });
+    }
+  );
+
+  server.tool(
+    "voice_get_call_result",
+    "Fetch the status, transcript, summary, and recording URL of a previously-placed call. Call this after voice_create_call to retrieve the conversation result. If the status is 'queued' or 'in-progress', wait ~15-30 seconds and call again.",
+    { call_id: z.string() },
+    async ({ call_id }) => {
+      let config;
+      try {
+        config = loadConfig();
+        requireKeys(config, ["VAPI_API_KEY"], "voice");
+      } catch (err) {
+        return errorReply(err.message);
+      }
+
+      try {
+        const result = await getVapiCallResult(config, call_id);
+        // If the call has ended, append the transcript/summary to history
+        // so future query_history calls can surface it.
+        if (
+          result.status === "ended" &&
+          (result.transcript || result.summary)
+        ) {
+          appendHistory({
+            channel: "voice",
+            contact: call_id,
+            direction: "inbound",
+            summary: result.summary || "Call transcript",
+            content: result.transcript || "",
+            status: "sent",
+            provider_call_id: call_id,
+            duration_seconds: result.duration_seconds,
+            recording_url: result.recording_url,
+          });
+        }
+        return jsonReply(result);
+      } catch (err) {
+        if (err instanceof VapiError) return errorReply(err.message);
+        return errorReply("Vapi lookup failed: " + err.message);
+      }
     }
   );
 }

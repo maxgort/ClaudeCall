@@ -88,30 +88,46 @@ It is structurally impossible for Claude to bypass the preview step — the send
 
 That's it. Claude will draft, preview, and wait for your approval.
 
-### Option B — From source (for developers)
+### Option B — From source (three commands)
 
 ```bash
-git clone https://github.com/maljorka/ClaudeCall.git
+git clone https://github.com/maxgort/ClaudeCall.git
 cd ClaudeCall
 npm install
-npm run init
+npm run setup
 ```
 
-Then edit `~/.claudecall/config.env` with your credentials and run the installer:
+`npm run setup` launches an **interactive wizard** that walks you through
+every channel you want, one at a time. For each channel it:
 
-- **macOS / Linux:** `./install.sh`
-- **Windows:** `powershell -ExecutionPolicy Bypass -File install.ps1`
+- Opens the right signup/config page in your browser
+- Waits for you to copy the credentials
+- Runs any required OAuth login flows (Telegram SMS code, Google consent)
+- Saves everything to `~/.claudecall/config.env`
+- Patches your Claude Desktop config to register the MCP servers
 
-Restart Claude Desktop and you're done.
+Typical setup time is 5-15 minutes depending on how many channels you enable.
+You can skip any channel by answering `n` and come back to it later by re-running
+`npm run setup`.
+
+After it finishes, quit Claude Desktop from the tray and reopen it — your new
+tools will appear automatically.
 
 ### Getting credentials
 
+`npm run setup` opens each of these in your browser automatically and prompts
+you to paste the result. If you'd rather configure manually, here's where
+everything lives:
+
 | Service | Where to get it | Cost |
 |---|---|---|
-| **Gmail SMTP** | [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (requires 2FA) | Free |
-| **Vapi** | [dashboard.vapi.ai](https://dashboard.vapi.ai) → Settings → API Keys | ~$0.10-0.30/min per call |
+| **Gmail SMTP + IMAP** | [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (requires 2FA) | Free |
 | **Telegram API** | [my.telegram.org](https://my.telegram.org) → API development tools | Free |
-| **Telegram session** | Run `node scripts/telegram_login.mjs` from the git checkout | Free |
+| **Telegram session** | `node scripts/telegram_login.mjs` (interactive, saves session) | Free |
+| **Slack bot token** | [api.slack.com/apps](https://api.slack.com/apps) → Create app → OAuth scopes → Install to workspace | Free |
+| **Google Calendar OAuth** | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) → Desktop app client | Free |
+| **Google Calendar refresh token** | `node scripts/calendar_login.mjs` (browser consent) | Free |
+| **Vapi API key + phone + assistant** | [dashboard.vapi.ai](https://dashboard.vapi.ai) | ~$0.10-0.30/min per call |
 
 ## Architecture
 

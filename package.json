@@ -1,0 +1,39 @@
+{
+  "name": "claudecall",
+  "version": "0.1.0",
+  "description": "ClaudeCall — turn Claude into your personal communication agent. Sends emails, places phone calls, and messages chats with human approval before anything goes out.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "init": "node skill/scripts/init_db.mjs",
+    "mcp:email": "node mcps/email/index.mjs",
+    "mcp:voice": "node mcps/voice/index.mjs",
+    "mcp:telegram": "node mcps/telegram/index.mjs",
+    "test": "node --test --test-reporter=spec \"test/unit/*.test.mjs\" \"test/integration/*.test.mjs\"",
+    "test:unit": "node --test --test-reporter=spec \"test/unit/*.test.mjs\"",
+    "test:integration": "node --test --test-reporter=spec \"test/integration/*.test.mjs\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "nodemailer": "^8.0.5",
+    "telegram": "^2.26.22",
+    "zod": "^3.23.8"
+  },
+  "keywords": [
+    "claude",
+    "claude-skill",
+    "mcp",
+    "ai-agent",
+    "email",
+    "voice",
+    "telegram",
+    "communication"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2"
+  }
+}
